@@ -23,7 +23,7 @@ object SeedNodeMain {
     val hostname = InetAddress.getLocalHost().getHostName().toUpperCase()
     val parameters = args.mkString( "," )
 
-    LOG.info( s"Starting LOCAL actor system on: $hostname parameters: $parameters" )
+    LOG.info( s"Starting SEED NODE actor system on: $hostname parameters: $parameters" )
 
     val configFile = getClass.getClassLoader.getResourceAsStream("seed_node.conf")
     val configContent = Source.fromInputStream( configFile ).mkString.replaceAll( "%HOSTNAME%", hostname )
@@ -37,15 +37,11 @@ object SeedNodeMain {
     val promise = PromiseRef( system, Timeout( FiniteDuration( 600, TimeUnit.SECONDS ) ))
 
     // this actor will send messages to remote actors
-    if( args.length > 0 ) {
-      val localActor = system.actorOf( SeedNodeActor.props( promise ), name = "LocalActor" )
+    val localActor = system.actorOf( SeedNodeActor.props( promise ), name = classOf[SeedNodeActor].getName )
 
-      implicit val executor = ExecutionContext.global
-      system.scheduler.scheduleOnce( 10 seconds, localActor, SendTo( "Hello everyone", "all" ) )
-      system.scheduler.scheduleOnce( 20 seconds, localActor, SendTo( RemoteTerminateRequest( "We are done" ), "all" ) )
-    }
-    else
-      promise.ref ! "Done!"
+    implicit val executor = ExecutionContext.global
+    system.scheduler.scheduleOnce( 20 seconds, localActor, SendTo( "Hello everyone", "all" ) )
+    system.scheduler.scheduleOnce( 30 seconds, localActor, SendTo( RemoteTerminateRequest( "We are done" ), "all" ) )
 
     ExampleUtil.shutDown( promise, system )
   }

@@ -17,7 +17,7 @@ object ClusterNodeMain {
 
   def main(args: Array[String]): Unit = {
     val hostname = InetAddress.getLocalHost().getHostName().toUpperCase()
-    LOG.info( s"Starting REMOTE actor system on $hostname" )
+    LOG.info( s"Starting CLUSTER NODE actor system on $hostname" )
 
     val configFile = getClass.getClassLoader.getResourceAsStream("cluster_node.conf")
     val configContent = Source.fromInputStream( configFile ).mkString.replaceAll( "%HOSTNAME%", hostname )
@@ -31,7 +31,7 @@ object ClusterNodeMain {
     val promise = PromiseRef( system, Timeout( FiniteDuration( 600, TimeUnit.SECONDS ) ))
 
     // this actor will reply to 'local' actor
-    val remoteLocal = system.actorOf( ClusterNodeActor.props( clusterSeed = args(0).toUpperCase, promise), name = s"RemoteActor$hostname" )
+    val remoteLocal = system.actorOf( ClusterNodeActor.props( clusterSeed = args(0).toUpperCase, promise), name = s"${classOf[ClusterNodeActor].getName}$hostname" )
     LOG.info( s"Started actor: $remoteLocal on host: $hostname" )
 
     ExampleUtil.shutDown( promise, system )

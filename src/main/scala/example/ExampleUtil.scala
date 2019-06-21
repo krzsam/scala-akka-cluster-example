@@ -13,10 +13,11 @@ object ExampleUtil {
    */
   def shutDown(promise: PromiseRef[Any], system: ActorSystem ) : Unit = {
     while( !promise.promise.isCompleted ) {
+      LOG.info("Waiting for signal to shut down")
       Thread.sleep( 5000 )
     }
 
-    LOG.info("All messages processed")
+    LOG.info("Shut down starting ...")
     val term = system.terminate()
     while( !term.isCompleted ) {
       LOG.info(" Waiting for system to shut down")

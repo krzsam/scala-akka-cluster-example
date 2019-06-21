@@ -22,15 +22,15 @@ node systems. All the actor systems can be started up in a ny order.
   
 ### Actors
 There are two classes of actors in the project:
-* **SeedNodeActor** - main actor which can be understood as a client actor to the remote actors running on regular cluster nodes. The seed node actor system binds on a well-known port number 2552.
-* **ClusterNodeActor** - actors which provide an echo-like service to the actor running on the seed node. There may one or more of remote actors running on a number of hosts. 
+* **SeedNodeActor** - main actor which can be understood as a client actor to the cluster node actors running on regular cluster nodes. The seed node actor system binds on a well-known port number 2552.
+* **ClusterNodeActor** - actors which provide an echo-like service to the actor running on the seed node. There may one or more of cluster node actor systems running on a number of hosts. 
   There may be any number (limited by memory size of course) of regular cluster node systems running on one physical host (cluster node systems bind on a random port). 
   Also, to ease debugging and make logs more clear, an instance of the ClusterNodeActor contains the name of the host in its name.
   
 From the perspective of the actual deployment as used during the tests, the actor instances were as follows:
-* Host: **pi1** , **SeedNodeActor** - *akka.tcp://ClusterSystem@PI1:2552/user/LocalActor*   (the port will be random here and likely different each time)
-* Host: **pi2** , **ClusterNodeActor** - *akka.tcp://ClusterSystem@PI2:1234/user/RemoteActorPI2*
-* Host: **pi3** , **ClusterNodeActor** - *akka.tcp://ClusterSystem@PI3:5678/user/RemoteActorPI3*
+* Host: **pi1** , **SeedNodeActor** - *akka.tcp://ClusterSystem@PI1:2552/user/example.SeedNodeActor*
+* Host: **pi2** , **ClusterNodeActor** - *akka.tcp://ClusterSystem@PI2:33971/user/example.ClusterNodeActorPI2*
+* Host: **pi3** , **ClusterNodeActor** - *akka.tcp://ClusterSystem@PI3:34113/user/example.ClusterNodeActorPI3]*
   
 ### Messages
 * **akka.actor.Identify** : sent from **SeedNodeActor** to **ClusterNodeActor**.
@@ -38,7 +38,7 @@ From the perspective of the actual deployment as used during the tests, the acto
   For such selection, a message of type *Identify* is sent so *ActorRef* references can be captured once *ActorIdentity* message
   is received back by SeedNodeActor. This message Identify is handled by Akka itself. *correlationId* field is used to log *ActorSelection* path queried.
 * **akka.actor.ActorIdentity** : sent from **ClusterNodeActor** to **SeedNodeActor**. *SeedNodeActor* upon reception of this message, stores the associated *ActorRef*
-  references in the set which is later used to send messages to all remote actors in the cluster and to implement graceful shut down of the actor systems. 
+  references in the set which is later used to send messages to all cluster node actors in the cluster and to implement graceful shut down of the actor systems. 
   *correlationId* is used to log *ActorSelection* path queried.
 * **example.SeedNodeActor.SendTo** : sent to **SeedNodeActor**
   This message instructs SeedNodeActor where to send a given message. The message class has two fields:
@@ -50,7 +50,7 @@ From the perspective of the actual deployment as used during the tests, the acto
   to guarding whether the system can be shut down.
 * **example.SeedNodeActor.RemoteTerminateResponse** : sent from **ClusterNodeActor** to **SeedNodeActor**. The message is sent to support graceful shut down of *Seed* and all *Cluster* node actor systems.
   Reception of *RemoteTerminateResponse* by the *Seed* system indicated that the sender of this message (a *Cluster* node actor system) confirmed *RemoteTerminateRequest* and is being shut down. *ClusterNodeActor* keeps track
-   of which *Cluster* node systems replied with *RemoteTerminateResponse* in a map. Once all known *Remote* systems confirmed their shutdown, the *SeedNodeActor* actor sends a message to its own promise to trigger a semaphore 
+   of which *Cluster* node systems replied with *RemoteTerminateResponse* in a map. Once all known *Cluster* node systems confirmed their shutdown, the *SeedNodeActor* actor sends a message to its own promise to trigger a semaphore 
    guarding whether the *Seed* node system can be shut down.
    
 ### Configuration files
@@ -91,6 +91,12 @@ It is possible as the *Seed* node actor system will bind on well known port 2552
 As mentioned in the **Build** section, you can copy the fat jar to a number of hosts - one of them will serve as your *Seed* node actor system, the others can host any number
 of *Cluster* node actor systems.
 The way how to start them was provided in the **Main classes** section. The nodes should join up and form a cluster automatically as supported by Akka cluster functionality.
+
+#### Example message passing scenario
+In this example application, a message is scheduled in the *Seed* node actor system to be sent after **20 seconds** to **SeedNodeActor** which will then 
+send a message to every **ClusterNodeActor** actor in the *Cluster* nodes. After further **10 seconds** another message is scheduled to be sent to **SeedNodeActor**
+which in turn will request all **ClusterNodeActor** to shut down their respective actor systems, which once complete via reply message, will cause shut down
+of **SeedNodeActor** as well.
 
 ### Development environment
 

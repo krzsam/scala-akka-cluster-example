@@ -16,7 +16,7 @@ trait ActorBase extends Actor with ActorLogging {
       log.info( s"Cluster joined by member ${member}" )
       members += member
 
-      val path = member.address + "/user/RemoteActor*"
+      val path = member.address + "/user/" + classOf[ClusterNodeActor].getName + "*"
       log.info( s"Sending Identify to all remote actors on path: ${path}" )
       val remoteActors: ActorSelection = context.actorSelection( path )
       remoteActors ! Identify( path )
