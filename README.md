@@ -30,7 +30,7 @@ There are two classes of actors in the project:
 From the perspective of the actual deployment as used during the tests, the actor instances were as follows:
 * Host: **pi1** , **SeedNodeActor** - *akka.tcp://ClusterSystem@PI1:2552/user/example.SeedNodeActor*
 * Host: **pi2** , **ClusterNodeActor** - *akka.tcp://ClusterSystem@PI2:33971/user/example.ClusterNodeActorPI2*
-* Host: **pi3** , **ClusterNodeActor** - *akka.tcp://ClusterSystem@PI3:34113/user/example.ClusterNodeActorPI3]*
+* Host: **pi3** , **ClusterNodeActor** - *akka.tcp://ClusterSystem@PI3:34113/user/example.ClusterNodeActorPI3*
   
 ### Messages
 * **akka.actor.Identify** : sent from **SeedNodeActor** to **ClusterNodeActor**.
