@@ -19,7 +19,7 @@ object ClusterNodeMain {
     val hostname = InetAddress.getLocalHost().getHostName().toUpperCase()
     LOG.info( s"Starting REMOTE actor system on $hostname" )
 
-    val configFile = getClass.getClassLoader.getResourceAsStream("remote_system.conf")
+    val configFile = getClass.getClassLoader.getResourceAsStream("cluster_node.conf")
     val configContent = Source.fromInputStream( configFile ).mkString.replaceAll( "%HOSTNAME%", hostname )
     LOG.info( s"REMOTE config: $configContent")
 

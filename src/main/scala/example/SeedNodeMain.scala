@@ -25,7 +25,7 @@ object SeedNodeMain {
 
     LOG.info( s"Starting LOCAL actor system on: $hostname parameters: $parameters" )
 
-    val configFile = getClass.getClassLoader.getResourceAsStream("local_system.conf")
+    val configFile = getClass.getClassLoader.getResourceAsStream("seed_node.conf")
     val configContent = Source.fromInputStream( configFile ).mkString.replaceAll( "%HOSTNAME%", hostname )
     LOG.info( s"LOCAL Config: $configContent")
 
