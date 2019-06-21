@@ -27,7 +27,7 @@ object SeedNodeMain {
 
     val configFile = getClass.getClassLoader.getResourceAsStream("seed_node.conf")
     val configContent = Source.fromInputStream( configFile ).mkString.replaceAll( "%HOSTNAME%", hostname )
-    LOG.info( s"LOCAL Config: $configContent")
+    LOG.info( s"SEED NODE Config: $configContent")
 
     val config = ConfigFactory.parseString( configContent )
 

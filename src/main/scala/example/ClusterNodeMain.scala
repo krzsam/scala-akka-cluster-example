@@ -21,7 +21,7 @@ object ClusterNodeMain {
 
     val configFile = getClass.getClassLoader.getResourceAsStream("cluster_node.conf")
     val configContent = Source.fromInputStream( configFile ).mkString.replaceAll( "%HOSTNAME%", hostname )
-    LOG.info( s"REMOTE config: $configContent")
+    LOG.info( s"CLUSTER NODE config: $configContent")
 
     val config = ConfigFactory.parseString( configContent )
 
