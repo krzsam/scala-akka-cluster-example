@@ -3,21 +3,21 @@ package example
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.{Cluster, ClusterEvent}
 import akka.pattern.PromiseRef
-import example.LocalActor.RemoteTerminateResponse
-import example.RemoteActor.RemoteTerminateRequest
+import example.SeedNodeActor.RemoteTerminateResponse
+import example.ClusterNodeActor.RemoteTerminateRequest
 
-object RemoteActor {
-  def props( clusterSeed: String, promise: PromiseRef[Any] ) : Props = Props( new RemoteActor( clusterSeed, promise ) )
+object ClusterNodeActor {
+  def props( clusterSeed: String, promise: PromiseRef[Any] ) : Props = Props( new ClusterNodeActor( clusterSeed, promise ) )
 
   abstract sealed class Messages
   case class RemoteTerminateRequest( msg: String = "" ) extends Messages
 }
 
-class RemoteActor( clusterSeed:String, promise: PromiseRef[Any] ) extends Actor with ActorLogging with ActorBase {
+class ClusterNodeActor(clusterSeed:String, promise: PromiseRef[Any] ) extends Actor with ActorLogging with ActorBase {
   val cluster = Cluster( context.system )
   cluster.subscribe( self, classOf[ClusterEvent.MemberUp], classOf[ClusterEvent.MemberLeft], classOf[ClusterEvent.MemberRemoved] )
   val main = cluster.selfAddress
-  val seed = main.copy( port = Some(LocalActor.ClusterPort), host = Some(clusterSeed) )
+  val seed = main.copy( port = Some(SeedNodeActor.ClusterPort), host = Some(clusterSeed) )
   cluster.join(seed)
 
   override def postStop = {

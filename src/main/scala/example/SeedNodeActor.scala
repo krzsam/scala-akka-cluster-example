@@ -3,12 +3,12 @@ package example
 import akka.actor.{Actor, ActorLogging, Address, Props}
 import akka.cluster.{Cluster, ClusterEvent}
 import akka.pattern.PromiseRef
-import example.LocalActor.{RemoteTerminateResponse, SendTo}
+import example.SeedNodeActor.{RemoteTerminateResponse, SendTo}
 
 import scala.language.postfixOps
 
-object LocalActor {
-  def props( promise: PromiseRef[Any] ) : Props = Props( new LocalActor( promise ) )
+object SeedNodeActor {
+  def props( promise: PromiseRef[Any] ) : Props = Props( new SeedNodeActor( promise ) )
 
   abstract sealed class Messages
   case class RemoteTerminateResponse(msg: String = "" ) extends Messages
@@ -17,10 +17,10 @@ object LocalActor {
   val ClusterPort = 2552
 }
 
-class LocalActor( promise: PromiseRef[Any] ) extends Actor with ActorLogging with ActorBase {
+class SeedNodeActor(promise: PromiseRef[Any] ) extends Actor with ActorLogging with ActorBase {
   val cluster = Cluster( context.system )
   cluster.subscribe( self, classOf[ClusterEvent.MemberUp], classOf[ClusterEvent.MemberLeft], classOf[ClusterEvent.MemberRemoved] )
-  val main: Address = cluster.selfAddress.copy( port = Some(LocalActor.ClusterPort) )
+  val main: Address = cluster.selfAddress.copy( port = Some(SeedNodeActor.ClusterPort) )
   cluster.joinSeedNodes( main :: Nil )
 
   override def postStop = {

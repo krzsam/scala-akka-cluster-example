@@ -7,21 +7,27 @@ import akka.actor.ActorSystem
 import akka.pattern.PromiseRef
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import example.SeedNodeActor.SendTo
+import example.ClusterNodeActor.RemoteTerminateRequest
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
+import scala.concurrent.duration._
 
-object RemoteMain {
+object SeedNodeMain {
   private val LOG: Logger = LoggerFactory.getLogger( this.getClass )
 
   def main(args: Array[String]): Unit = {
     val hostname = InetAddress.getLocalHost().getHostName().toUpperCase()
-    LOG.info( s"Starting REMOTE actor system on $hostname" )
+    val parameters = args.mkString( "," )
 
-    val configFile = getClass.getClassLoader.getResourceAsStream("remote_system.conf")
+    LOG.info( s"Starting LOCAL actor system on: $hostname parameters: $parameters" )
+
+    val configFile = getClass.getClassLoader.getResourceAsStream("local_system.conf")
     val configContent = Source.fromInputStream( configFile ).mkString.replaceAll( "%HOSTNAME%", hostname )
-    LOG.info( s"REMOTE config: $configContent")
+    LOG.info( s"LOCAL Config: $configContent")
 
     val config = ConfigFactory.parseString( configContent )
 
@@ -30,9 +36,16 @@ object RemoteMain {
     // promise - to be notified with any message that the system can shut down
     val promise = PromiseRef( system, Timeout( FiniteDuration( 600, TimeUnit.SECONDS ) ))
 
-    // this actor will reply to 'local' actor
-    val remoteLocal = system.actorOf( RemoteActor.props( clusterSeed = args(0).toUpperCase, promise), name = s"RemoteActor$hostname" )
-    LOG.info( s"Started actor: $remoteLocal on host: $hostname" )
+    // this actor will send messages to remote actors
+    if( args.length > 0 ) {
+      val localActor = system.actorOf( SeedNodeActor.props( promise ), name = "LocalActor" )
+
+      implicit val executor = ExecutionContext.global
+      system.scheduler.scheduleOnce( 10 seconds, localActor, SendTo( "Hello everyone", "all" ) )
+      system.scheduler.scheduleOnce( 20 seconds, localActor, SendTo( RemoteTerminateRequest( "We are done" ), "all" ) )
+    }
+    else
+      promise.ref ! "Done!"
 
     ExampleUtil.shutDown( promise, system )
   }
